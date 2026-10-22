@@ -3,7 +3,7 @@
 ## Pasos
 1. Clases de dominio — hecho
 2. Relaciones — hecho
-3. Serialización y esquemas Pydantic — en curso
+3. Serialización y esquemas Pydantic — parcial (Usuario y Evento hechos)
 4. Tablas SQL (SQLite) — pendiente
 5. Repositorios — pendiente
 6. Servicios — pendiente

@@ -2,15 +2,15 @@
 
 ## Capas (de fuera hacia dentro)
 
-Chatbot (interfaz, herramientas)
--> Router / fábrica de agentes
--> Agentes (personal, NBA)
--> Servicios (lógica de aplicación)
--> Repositorios -> SQLite
-Dominio (app/domain) y Esquemas (app/schemas) los usan todas las capas.
+    Chatbot (interfaz, herramientas)
+      -> Router / fábrica de agentes
+        -> Agentes (personal, NBA)
+          -> Servicios (lógica de aplicación)
+            -> Repositorios -> SQLite
 
-text
-Solo existen hoy el dominio y, en curso, los esquemas.
+    Dominio (app/domain) y Esquemas (app/schemas) los usan todas las capas.
+
+Hoy existen el dominio y los esquemas de Usuario y Evento.
 
 ## Reglas
 1. `app/domain` es puro: sin SQL, sin FastAPI, sin librerías de IA, sin I/O.

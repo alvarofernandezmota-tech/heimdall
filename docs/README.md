@@ -15,7 +15,7 @@ lenguaje interpreta y explica; Python calcula; SQLite conserva los datos.
 
 ## Estado (22 oct 2026)
 - Dominio y relaciones: hecho, 39 tests en verde.
-- Esquemas Pydantic: en curso.
+- Esquemas Pydantic: Usuario y Evento hechos; faltan los demás. Total: 46 tests en verde.
 - Persistencia, servicios, agentes y chatbot: pendientes.
 - `app/domain/nba/` está vacío a propósito.
 
