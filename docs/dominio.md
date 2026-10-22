@@ -24,7 +24,7 @@ Método: `esta_vacio()` (true si solo hay espacios).
 `Horario(eventos)`:
 - `eventos_ordenados()`
 - `eventos_del_dia(dia, zona)`: solo activos, día calculado en la zona dada.
-- `hay_conflicto(nuevo)`: contra activos.
+- `hay_conflicto(nuevo)`: contra los eventos activos del mismo usuario.
 - `celdas_del_dia(dia, zona, minutos=15)`: lista de booleanos (ocupado/libre). Se calcula, no se guarda. 96 celdas de 15 min; el día de cambio de hora tiene más o menos según el cambio.
 
 ## habit.py

@@ -10,7 +10,7 @@
 
     Dominio (app/domain) y Esquemas (app/schemas) los usan todas las capas.
 
-Hoy existen el dominio y los esquemas de Usuario y Evento.
+Hoy existen el dominio y los esquemas de todas sus clases.
 
 ## Reglas
 1. `app/domain` es puro: sin SQL, sin FastAPI, sin librerías de IA, sin I/O.
