@@ -16,6 +16,8 @@ Esperado hoy: 62 tests en verde.
 | test_schemas.py | 7 |
 | test_schemas_resto.py | 15 |
 | test_horario_usuarios.py | 1 |
+| test_schemas_resto.py | 15 |
+| test_horario_usuarios.py | 1 |
 
 
 ## Convenciones
