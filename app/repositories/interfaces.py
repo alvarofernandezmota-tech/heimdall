@@ -7,10 +7,11 @@ El resto de la aplicación depende de las interfaces, no de SQLite.
 """
 
 from abc import ABC, abstractmethod
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from app.domain.habit import Habito, RegistroHabito
 from app.domain.schedule import Evento
 from app.domain.user import Usuario
 
@@ -62,3 +63,57 @@ class RepositorioEventos(ABC):
     @abstractmethod
     def eliminar(self, evento_id: UUID) -> bool:
         """Elimina el evento. Devuelve ``True`` si existía."""
+
+
+class RepositorioHabitos(ABC):
+    """Operaciones de almacenamiento de hábitos."""
+
+    @abstractmethod
+    def guardar(self, habito: Habito) -> None:
+        """Inserta el hábito o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, habito_id: UUID) -> Habito | None:
+        """Devuelve el hábito con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_usuario(
+        self, usuario_id: UUID, solo_activos: bool = False
+    ) -> list[Habito]:
+        """Devuelve los hábitos de un usuario ordenados por nombre.
+
+        Con ``solo_activos=True`` se omiten los hábitos desactivados.
+        """
+
+    @abstractmethod
+    def eliminar(self, habito_id: UUID) -> bool:
+        """Elimina el hábito y sus registros. Devuelve ``True`` si existía."""
+
+
+class RepositorioRegistrosHabito(ABC):
+    """Operaciones de almacenamiento de registros de hábitos."""
+
+    @abstractmethod
+    def guardar(self, registro: RegistroHabito) -> None:
+        """Inserta el registro o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, registro_id: UUID) -> RegistroHabito | None:
+        """Devuelve el registro con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_habito(self, habito_id: UUID) -> list[RegistroHabito]:
+        """Devuelve todos los registros de un hábito, del más antiguo al más reciente."""
+
+    @abstractmethod
+    def listar_por_rango(
+        self, habito_id: UUID, desde: datetime, hasta: datetime
+    ) -> list[RegistroHabito]:
+        """Devuelve los registros con ``desde <= fecha < hasta``, ordenados por fecha.
+
+        Ambas fechas deben llevar zona horaria.
+        """
+
+    @abstractmethod
+    def eliminar(self, registro_id: UUID) -> bool:
+        """Elimina el registro. Devuelve ``True`` si existía."""

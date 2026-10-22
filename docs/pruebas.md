@@ -1,7 +1,7 @@
 # Pruebas
 
 Se ejecutan con `pytest -q` (configuración en `pytest.ini`, `pythonpath = .`).
-Esperado hoy: 104 tests en verde.
+Esperado hoy: 120 tests en verde.
 
 | Archivo | Tests |
 |---|---|
@@ -21,6 +21,7 @@ Esperado hoy: 104 tests en verde.
 | test_fechas.py | 4 |
 | test_repo_usuarios.py | 6 |
 | test_repo_eventos.py | 9 |
+| test_repo_habitos.py | 16 |
 
 ## Convenciones
 - Un archivo de test por módulo de dominio.
