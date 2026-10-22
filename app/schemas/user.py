@@ -1,9 +1,8 @@
-from datetime import datetime
 from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 from app.domain.user import Usuario
 
@@ -16,7 +15,7 @@ class UsuarioSchema(BaseModel):
     idioma: str = "es-ES"
     zona_horaria: str = "Europe/Madrid"
     preferencias: dict[str, Any] = Field(default_factory=dict)
-    fecha_creacion: datetime
+    fecha_creacion: AwareDatetime
     activo: bool = True
 
     @field_validator("nombre")

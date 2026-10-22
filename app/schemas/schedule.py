@@ -1,7 +1,6 @@
-from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from app.domain.schedule import EstadoEvento, Evento
 
@@ -12,8 +11,8 @@ class EventoSchema(BaseModel):
     id: UUID
     usuario_id: UUID
     titulo: str = Field(min_length=1)
-    comienza: datetime
-    termina: datetime
+    comienza: AwareDatetime
+    termina: AwareDatetime
     descripcion: str | None = None
     ubicacion: str | None = None
     estado: EstadoEvento = EstadoEvento.PROGRAMADO
