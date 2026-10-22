@@ -28,6 +28,9 @@ class Habito:
     def desactivar(self) -> None:
         self.activo = False
 
+    def cumple(self, valor: float) -> bool:
+        return valor >= self.objetivo
+
 
 @dataclass
 class RegistroHabito:

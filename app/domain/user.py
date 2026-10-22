@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 
 @dataclass
@@ -19,3 +20,6 @@ class Usuario:
 
     def desactivar(self) -> None:
         self.activo = False
+
+    def zona(self) -> ZoneInfo:
+        return ZoneInfo(self.zona_horaria)
