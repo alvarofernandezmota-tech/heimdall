@@ -59,7 +59,10 @@ class Horario:
         return sorted(del_dia, key=lambda evento: evento.comienza)
 
     def hay_conflicto(self, nuevo: Evento) -> bool:
-        return any(e.esta_activo() and e.se_solapa_con(nuevo) for e in self.eventos)
+        return any(
+            e.usuario_id == nuevo.usuario_id and e.esta_activo() and e.se_solapa_con(nuevo)
+            for e in self.eventos
+        )
 
     def celdas_del_dia(self, dia: date, zona: ZoneInfo, minutos: int = 15) -> list[bool]:
         inicio = datetime.combine(dia, time.min, tzinfo=zona).astimezone(UTC)
