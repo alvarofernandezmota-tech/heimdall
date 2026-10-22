@@ -1,7 +1,7 @@
 # Pruebas
 
 Se ejecutan con `pytest -q` (configuración en `pytest.ini`, `pythonpath = .`).
-Esperado hoy: 211 tests en verde.
+Esperado hoy: 239 tests en verde.
 
 | Archivo | Tests |
 |---|---|
@@ -29,6 +29,7 @@ Esperado hoy: 211 tests en verde.
 | test_servicios_agenda.py | 17 |
 | test_servicios_recordatorios.py | 14 |
 | test_agenda_recordatorios.py | 6 |
+| test_importaciones.py | 28 |
 | test_calidad.py | 2 |
 
 ## Convenciones

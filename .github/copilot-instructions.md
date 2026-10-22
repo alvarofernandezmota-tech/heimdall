@@ -10,3 +10,4 @@ Lee `docs/README.md` y los documentos que enlaza antes de revisar o proponer cam
 - Cada cambio lleva su test; verifica con `pytest -q`.
 - No añadir FastAPI, Telegram ni NBA hasta terminar dominio, esquemas, SQL, repositorios y servicios.
 - Cambios pequeños: un archivo y su test por vez.
+- Las fronteras de importación entre capas las vigila `tests/test_importaciones.py`; si una capa necesita importar otra, amplía `REGLAS` ahí y documéntalo en `docs/arquitectura.md`.

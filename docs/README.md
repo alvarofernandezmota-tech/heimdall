@@ -17,7 +17,7 @@ lenguaje interpreta y explica; Python calcula; SQLite conserva los datos.
 
 ## Estado (22 oct 2026)
 - Dominio y relaciones: hecho.
-- Esquemas Pydantic: hechos para todas las clases. Total: 211 tests en verde.
+- Esquemas Pydantic: hechos para todas las clases. Total: 239 tests en verde.
 - Base de datos SQLite (esquema y conexión): hecha.
 - Repositorios SQLite: hechos para todas las entidades.
 - Servicios: Usuarios, Agenda y Recordatorios hechos; faltan Hábitos, Objetivos y Conversaciones.

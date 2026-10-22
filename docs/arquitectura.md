@@ -24,3 +24,22 @@ Hoy existen el dominio, los esquemas, la base de datos SQLite y los repositorios
 2. La herramienta pide al servicio los eventos, hábitos y recordatorios del usuario.
 3. `resumen_del_dia` calcula el resultado en Python, sin modelo de lenguaje.
 4. El modelo, si se usa, solo redacta la respuesta con ese resultado.
+
+## Fronteras de importación
+Las vigila `tests/test_importaciones.py`, que analiza los `import` con `ast` sin ejecutar código.
+Cada fallo indica archivo y línea.
+
+| Capa | Puede importar | Bibliotecas externas |
+|---|---|---|
+| `domain` | `domain` | No |
+| `schemas` | `domain`, `schemas` | Sí |
+| `database` | `database` | No |
+| `repositories` | `domain`, `database`, `repositories` | No |
+| `services` | `domain`, `schemas`, `repositories.interfaces`, `services` | No |
+| `tools` (futura) | `domain`, `schemas`, `services`, `tools` | Sí |
+| `llm` (futura) | solo `llm` | Sí |
+| `agents` (futura) | `domain.message`, `llm`, `tools`, `agents` | Sí |
+
+- `sqlite3` solo se usa en `database` y `repositories`.
+- Las implementaciones `sqlite_*` solo las importa `app/composicion.py`, que es el único archivo exento.
+- Para permitir una dependencia nueva hay que ampliar `REGLAS` en el test y dejarlo escrito aquí.
