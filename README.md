@@ -2,7 +2,7 @@
 
 Asistente personal y módulo NBA. El modelo de lenguaje interpreta y explica; Python calcula; SQLite conserva los datos.
 
-Estado: dominio, esquemas, base SQLite y todos los repositorios SQLite listos, 165 tests. Siguiente: servicios de aplicación.
+Estado: dominio, esquemas, base SQLite y todos los repositorios SQLite y los servicios de usuarios y agenda listos, 191 tests. Siguiente: servicios de hábitos, objetivos y recordatorios.
 
 Documentación completa en [docs/README.md](docs/README.md).
 

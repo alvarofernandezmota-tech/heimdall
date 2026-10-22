@@ -11,15 +11,17 @@ lenguaje interpreta y explica; Python calcula; SQLite conserva los datos.
 | [dominio.md](dominio.md) | Clases, campos y métodos |
 | [decisiones.md](decisiones.md) | Decisiones de diseño y motivos |
 | [base-de-datos.md](base-de-datos.md) | Tablas SQLite y formatos |
+| [servicios.md](servicios.md) | Casos de uso y errores |
 | [pruebas.md](pruebas.md) | Tests y convenciones |
 | [hoja-de-ruta.md](hoja-de-ruta.md) | Qué falta y qué revisar |
 
 ## Estado (22 oct 2026)
 - Dominio y relaciones: hecho.
-- Esquemas Pydantic: hechos para todas las clases. Total: 165 tests en verde.
+- Esquemas Pydantic: hechos para todas las clases. Total: 191 tests en verde.
 - Base de datos SQLite (esquema y conexión): hecha.
 - Repositorios SQLite: hechos para todas las entidades.
-- Servicios, agentes y chatbot: pendientes.
+- Servicios: Usuarios y Agenda hechos; faltan Hábitos, Objetivos, Recordatorios y Conversaciones.
+- Agentes y chatbot: pendientes.
 - `app/domain/nba/` está vacío a propósito.
 
 ## Ejecutar
