@@ -29,7 +29,7 @@ El archivo `data/heimdall.sqlite3` no se sube a Git (ver `.gitignore`).
 
 ## Repositorios (`app/repositories/`)
 - `interfaces.py`: operaciones que ofrece cada repositorio (clases abstractas).
-- `sqlite_usuarios.py`, `sqlite_eventos.py`, `sqlite_habitos.py`, `sqlite_objetivos.py` y `sqlite_recordatorios.py`: implementación sobre SQLite.
+- `sqlite_usuarios.py`, `sqlite_eventos.py`, `sqlite_habitos.py`, `sqlite_objetivos.py`, `sqlite_recordatorios.py` y `sqlite_conversaciones.py` (conversaciones y mensajes): implementación sobre SQLite.
 - `guardar` inserta o actualiza con `ON CONFLICT DO UPDATE`; nunca `INSERT OR REPLACE`,
   porque borraría la fila y, por la cascada, los datos que dependen de ella.
 - Los repositorios no hacen `commit`; lo hace quien abre la conexión (`sesion_sqlite`).

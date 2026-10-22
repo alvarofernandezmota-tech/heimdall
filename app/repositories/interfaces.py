@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 
 from app.domain.goal import EstadoObjetivo, Objetivo
 from app.domain.habit import Habito, RegistroHabito
+from app.domain.message import Conversacion, Mensaje
 from app.domain.reminder import Recordatorio
 from app.domain.schedule import Evento
 from app.domain.user import Usuario
@@ -186,3 +187,59 @@ class RepositorioRecordatorios(ABC):
     @abstractmethod
     def eliminar(self, recordatorio_id: UUID) -> bool:
         """Elimina el recordatorio. Devuelve ``True`` si existía."""
+
+
+class RepositorioConversaciones(ABC):
+    """Operaciones de almacenamiento de conversaciones."""
+
+    @abstractmethod
+    def guardar(self, conversacion: Conversacion) -> None:
+        """Inserta la conversación o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, conversacion_id: UUID) -> Conversacion | None:
+        """Devuelve la conversación con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_usuario(
+        self, usuario_id: UUID, solo_activas: bool = False
+    ) -> list[Conversacion]:
+        """Devuelve las conversaciones de un usuario, las más recientes primero.
+
+        Con ``solo_activas=True`` se omiten las conversaciones cerradas.
+        """
+
+    @abstractmethod
+    def eliminar(self, conversacion_id: UUID) -> bool:
+        """Elimina la conversación y sus mensajes. Devuelve ``True`` si existía."""
+
+
+class RepositorioMensajes(ABC):
+    """Operaciones de almacenamiento de mensajes."""
+
+    @abstractmethod
+    def guardar(self, mensaje: Mensaje) -> None:
+        """Inserta el mensaje o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, mensaje_id: UUID) -> Mensaje | None:
+        """Devuelve el mensaje con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_conversacion(self, conversacion_id: UUID) -> list[Mensaje]:
+        """Devuelve los mensajes de una conversación, del más antiguo al más reciente."""
+
+    @abstractmethod
+    def listar_ultimos(self, conversacion_id: UUID, limite: int) -> list[Mensaje]:
+        """Devuelve los últimos ``limite`` mensajes, en orden cronológico.
+
+        Pueden incluir mensajes vacíos. ``historial_para_modelo`` los descarta, así
+        que puede devolver menos de ``limite`` entradas.
+
+        Raises:
+            ValueError: Si ``limite`` no es mayor que cero.
+        """
+
+    @abstractmethod
+    def eliminar(self, mensaje_id: UUID) -> bool:
+        """Elimina el mensaje. Devuelve ``True`` si existía."""
