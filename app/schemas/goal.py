@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.goal import EstadoObjetivo, Objetivo
+from app.schemas.comunes import TextoNoVacio
 
 
 class ObjetivoSchema(BaseModel):
@@ -11,7 +12,7 @@ class ObjetivoSchema(BaseModel):
 
     id: UUID
     usuario_id: UUID
-    nombre: str = Field(min_length=1)
+    nombre: TextoNoVacio
     descripcion: str | None = None
     fecha_limite: date | None = None
     progreso: float = Field(default=0.0, ge=0, le=100)

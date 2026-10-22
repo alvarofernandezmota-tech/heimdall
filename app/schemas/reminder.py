@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict
 
 from app.domain.reminder import EstadoRecordatorio, Recordatorio
+from app.schemas.comunes import TextoNoVacio
 
 
 class RecordatorioSchema(BaseModel):
@@ -10,7 +11,7 @@ class RecordatorioSchema(BaseModel):
 
     id: UUID
     usuario_id: UUID
-    mensaje: str = Field(min_length=1)
+    mensaje: TextoNoVacio
     programado_para: AwareDatetime
     evento_id: UUID | None = None
     habito_id: UUID | None = None

@@ -109,10 +109,14 @@ class Horario:
     def hay_conflicto(self, nuevo: Evento) -> bool:
         """Indica si un evento nuevo choca con alguno ya existente.
 
-        Solo se comparan los eventos activos del mismo usuario.
+        Solo se comparan los eventos activos del mismo usuario y se ignora el propio
+        evento (mismo ``id``), de modo que editar un evento no choca consigo mismo.
         """
         return any(
-            e.usuario_id == nuevo.usuario_id and e.esta_activo() and e.se_solapa_con(nuevo)
+            e.id != nuevo.id
+            and e.usuario_id == nuevo.usuario_id
+            and e.esta_activo()
+            and e.se_solapa_con(nuevo)
             for e in self.eventos
         )
 

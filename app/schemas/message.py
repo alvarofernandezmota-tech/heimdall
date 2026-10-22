@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from app.domain.message import Conversacion, Mensaje, RolMensaje
+from app.schemas.comunes import TextoNoVacio
 
 
 class ConversacionSchema(BaseModel):
@@ -11,7 +12,7 @@ class ConversacionSchema(BaseModel):
 
     id: UUID
     usuario_id: UUID
-    titulo: str = Field(min_length=1)
+    titulo: TextoNoVacio
     fecha_creacion: AwareDatetime
     activa: bool = True
 
