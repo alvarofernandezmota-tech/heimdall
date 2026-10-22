@@ -27,23 +27,35 @@ AHORA = datetime(2026, 10, 23, 12, 0, tzinfo=UTC)
 
 
 @pytest.fixture
-def entorno():
+def conexion():
     conexion = crear_conexion(":memory:")
     aplicar_schema(conexion)
+    try:
+        yield conexion
+    finally:
+        conexion.close()
+
+
+@pytest.fixture
+def entorno(conexion):
     usuarios = RepositorioUsuariosSQLite(conexion)
     eventos = RepositorioEventosSQLite(conexion)
     recordatorios = RepositorioRecordatoriosSQLite(conexion)
     usuario = Usuario(nombre="A")
     usuarios.guardar(usuario)
-    try:
-        yield (
-            ServicioRecordatorios(usuarios, eventos, recordatorios, reloj=lambda: AHORA),
-            ServicioAgenda(usuarios, eventos),
-            recordatorios,
-            usuario,
-        )
-    finally:
-        conexion.close()
+    return (
+        ServicioRecordatorios(usuarios, eventos, recordatorios, reloj=lambda: AHORA),
+        ServicioAgenda(usuarios, eventos),
+        recordatorios,
+        usuario,
+    )
+
+
+@pytest.fixture
+def otro_usuario(conexion):
+    usuario = Usuario(nombre="B")
+    RepositorioUsuariosSQLite(conexion).guardar(usuario)
+    return usuario
 
 
 def madrid(dia, hora, minuto=0):
@@ -80,7 +92,7 @@ def test_programar_de_usuario_inexistente_lanza_error(entorno):
 def test_programar_para_evento_calcula_la_hora_y_el_mensaje(entorno):
     servicio, agenda, repo, u = entorno
     e = agenda.crear_evento(u.id, "Gimnasio", madrid(23, 18), madrid(23, 19))
-    r = servicio.programar_para_evento(e.id, timedelta(minutes=30))
+    r = servicio.programar_para_evento(u.id, e.id, timedelta(minutes=30))
     assert r.evento_id == e.id
     assert r.programado_para == madrid(23, 17, 30)
     assert r.mensaje == "Gimnasio empieza a las 18:00"
@@ -90,52 +102,54 @@ def test_programar_para_evento_calcula_la_hora_y_el_mensaje(entorno):
 def test_programar_para_evento_acepta_mensaje_propio(entorno):
     servicio, agenda, _, u = entorno
     e = agenda.crear_evento(u.id, "Gimnasio", madrid(23, 18), madrid(23, 19))
-    r = servicio.programar_para_evento(e.id, timedelta(hours=1), mensaje="Prepara la bolsa")
+    r = servicio.programar_para_evento(u.id, e.id, timedelta(hours=1), mensaje="Prepara la bolsa")
     assert r.mensaje == "Prepara la bolsa"
 
 
 def test_programar_para_evento_inexistente_lanza_error(entorno):
-    servicio, _, _, _ = entorno
+    servicio, _, _, u = entorno
     with pytest.raises(EventoNoEncontrado):
-        servicio.programar_para_evento(uuid4(), timedelta(minutes=10))
+        servicio.programar_para_evento(u.id, uuid4(), timedelta(minutes=10))
 
 
 def test_programar_para_evento_cancelado_lanza_error(entorno):
     servicio, agenda, _, u = entorno
     e = agenda.crear_evento(u.id, "X", madrid(23, 18), madrid(23, 19))
-    agenda.cancelar_evento(e.id)
+    agenda.cancelar_evento(u.id, e.id)
     with pytest.raises(EventoNoActivo):
-        servicio.programar_para_evento(e.id, timedelta(minutes=10))
+        servicio.programar_para_evento(u.id, e.id, timedelta(minutes=10))
 
 
 def test_programar_para_evento_con_antelacion_negativa_lanza_error(entorno):
     servicio, agenda, _, u = entorno
     e = agenda.crear_evento(u.id, "X", madrid(23, 18), madrid(23, 19))
     with pytest.raises(ValueError):
-        servicio.programar_para_evento(e.id, timedelta(minutes=-5))
+        servicio.programar_para_evento(u.id, e.id, timedelta(minutes=-5))
 
 
 def test_aviso_de_evento_que_caeria_en_el_pasado_lanza_error(entorno):
     servicio, agenda, _, u = entorno
     e = agenda.crear_evento(u.id, "Pronto", madrid(23, 14, 30), madrid(23, 15))
     with pytest.raises(RecordatorioEnElPasado):
-        servicio.programar_para_evento(e.id, timedelta(hours=3))
+        servicio.programar_para_evento(u.id, e.id, timedelta(hours=3))
 
 
 def test_cancelar_y_marcar_enviado_se_guardan(entorno):
     servicio, _, repo, u = entorno
     a = servicio.programar(u.id, "A", madrid(23, 18))
     b = servicio.programar(u.id, "B", madrid(23, 19))
-    servicio.cancelar(a.id)
+    servicio.cancelar(u.id, a.id)
     servicio.marcar_enviado(b.id)
     assert repo.obtener(a.id).estado == EstadoRecordatorio.CANCELADO
     assert repo.obtener(b.id).estado == EstadoRecordatorio.ENVIADO
 
 
 def test_operar_sobre_un_recordatorio_inexistente_lanza_error(entorno):
-    servicio, _, _, _ = entorno
+    servicio, _, _, u = entorno
     with pytest.raises(RecordatorioNoEncontrado):
-        servicio.cancelar(uuid4())
+        servicio.cancelar(u.id, uuid4())
+    with pytest.raises(RecordatorioNoEncontrado):
+        servicio.marcar_enviado(uuid4())
 
 
 def test_pendientes_del_dia_usa_la_zona_del_usuario(entorno):
@@ -159,3 +173,20 @@ def test_vencidos_usa_el_reloj_y_deja_fuera_los_enviados(entorno):
     for r in (futuro, enviado, justo, viejo):
         repo.guardar(r)
     assert [r.mensaje for r in servicio.vencidos()] == ["Viejo", "Justo"]
+
+
+def test_no_se_puede_programar_un_aviso_para_el_evento_de_otro_usuario(entorno, otro_usuario):
+    servicio, agenda, repo, u = entorno
+    e = agenda.crear_evento(u.id, "Privado", madrid(23, 18), madrid(23, 19))
+    with pytest.raises(EventoNoEncontrado):
+        servicio.programar_para_evento(otro_usuario.id, e.id, timedelta(minutes=30))
+    assert repo.listar_por_usuario(u.id) == []
+    assert repo.listar_por_usuario(otro_usuario.id) == []
+
+
+def test_un_usuario_no_puede_cancelar_el_recordatorio_de_otro(entorno, otro_usuario):
+    servicio, _, repo, u = entorno
+    r = servicio.programar(u.id, "Privado", madrid(23, 18))
+    with pytest.raises(RecordatorioNoEncontrado):
+        servicio.cancelar(otro_usuario.id, r.id)
+    assert repo.obtener(r.id).estado == EstadoRecordatorio.PENDIENTE

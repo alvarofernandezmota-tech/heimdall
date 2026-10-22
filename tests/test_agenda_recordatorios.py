@@ -41,33 +41,33 @@ def madrid(dia, hora, minuto=0):
 def test_cancelar_un_evento_cancela_sus_recordatorios_pendientes(entorno):
     agenda, avisos, repo, u = entorno
     e = agenda.crear_evento(u.id, "Gimnasio", madrid(23, 18), madrid(23, 19))
-    r = avisos.programar_para_evento(e.id, timedelta(minutes=30))
-    agenda.cancelar_evento(e.id)
+    r = avisos.programar_para_evento(u.id, e.id, timedelta(minutes=30))
+    agenda.cancelar_evento(u.id, e.id)
     assert repo.obtener(r.id).estado == EstadoRecordatorio.CANCELADO
 
 
 def test_cancelar_un_evento_no_toca_los_recordatorios_ya_enviados(entorno):
     agenda, avisos, repo, u = entorno
     e = agenda.crear_evento(u.id, "Gimnasio", madrid(23, 18), madrid(23, 19))
-    r = avisos.programar_para_evento(e.id, timedelta(minutes=30))
+    r = avisos.programar_para_evento(u.id, e.id, timedelta(minutes=30))
     avisos.marcar_enviado(r.id)
-    agenda.cancelar_evento(e.id)
+    agenda.cancelar_evento(u.id, e.id)
     assert repo.obtener(r.id).estado == EstadoRecordatorio.ENVIADO
 
 
 def test_completar_un_evento_cancela_sus_recordatorios_pendientes(entorno):
     agenda, avisos, repo, u = entorno
     e = agenda.crear_evento(u.id, "Reunión", madrid(23, 18), madrid(23, 19))
-    r = avisos.programar_para_evento(e.id, timedelta(minutes=10))
-    agenda.completar_evento(e.id)
+    r = avisos.programar_para_evento(u.id, e.id, timedelta(minutes=10))
+    agenda.completar_evento(u.id, e.id)
     assert repo.obtener(r.id).estado == EstadoRecordatorio.CANCELADO
 
 
 def test_reprogramar_un_evento_desplaza_sus_recordatorios_pendientes(entorno):
     agenda, avisos, repo, u = entorno
     e = agenda.crear_evento(u.id, "Reunión", madrid(23, 18), madrid(23, 19))
-    r = avisos.programar_para_evento(e.id, timedelta(minutes=30))
-    agenda.reprogramar_evento(e.id, madrid(23, 20), madrid(23, 21))
+    r = avisos.programar_para_evento(u.id, e.id, timedelta(minutes=30))
+    agenda.reprogramar_evento(u.id, e.id, madrid(23, 20), madrid(23, 21))
     assert repo.obtener(r.id).programado_para == madrid(23, 19, 30)
     assert repo.obtener(r.id).estado == EstadoRecordatorio.PENDIENTE
 
@@ -75,9 +75,9 @@ def test_reprogramar_un_evento_desplaza_sus_recordatorios_pendientes(entorno):
 def test_reprogramar_no_mueve_los_recordatorios_ya_enviados(entorno):
     agenda, avisos, repo, u = entorno
     e = agenda.crear_evento(u.id, "Reunión", madrid(23, 18), madrid(23, 19))
-    r = avisos.programar_para_evento(e.id, timedelta(minutes=30))
+    r = avisos.programar_para_evento(u.id, e.id, timedelta(minutes=30))
     avisos.marcar_enviado(r.id)
-    agenda.reprogramar_evento(e.id, madrid(23, 20), madrid(23, 21))
+    agenda.reprogramar_evento(u.id, e.id, madrid(23, 20), madrid(23, 21))
     assert repo.obtener(r.id).programado_para == madrid(23, 17, 30)
 
 
@@ -90,6 +90,6 @@ def test_la_agenda_sin_repositorio_de_recordatorios_sigue_funcionando(entorno):
     usuarios.guardar(u)
     agenda = ServicioAgenda(usuarios, eventos)
     e = agenda.crear_evento(u.id, "X", madrid(23, 10), madrid(23, 11))
-    agenda.reprogramar_evento(e.id, madrid(23, 12), madrid(23, 13))
-    agenda.cancelar_evento(e.id)
+    agenda.reprogramar_evento(u.id, e.id, madrid(23, 12), madrid(23, 13))
+    agenda.cancelar_evento(u.id, e.id)
     conexion.close()

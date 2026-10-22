@@ -22,6 +22,10 @@ class ServicioAgenda:
     mismo usuario y delega el almacenamiento en los repositorios. No hace
     ``commit``: de eso se encarga quien abre la conexión.
 
+    Toda operación sobre un evento concreto recibe también el ``usuario_id`` de
+    quien la pide y solo actúa si el evento es suyo; si es de otro usuario,
+    responde igual que si no existiera, para no revelar que existe.
+
     Si se le da un repositorio de recordatorios, mantiene coherentes los avisos
     de cada evento: al cancelarlo o completarlo cancela los pendientes y al
     reprogramarlo los desplaza lo mismo que se movió el evento.
@@ -70,43 +74,47 @@ class ServicioAgenda:
         self._eventos.guardar(evento)
         return evento
 
-    def obtener_evento(self, evento_id: UUID) -> Evento:
-        """Devuelve el evento indicado.
+    def obtener_evento(self, usuario_id: UUID, evento_id: UUID) -> Evento:
+        """Devuelve un evento del usuario indicado.
 
         Raises:
-            EventoNoEncontrado: Si no existe.
+            EventoNoEncontrado: Si no existe o pertenece a otro usuario.
         """
         evento = self._eventos.obtener(evento_id)
-        if evento is None:
+        if evento is None or evento.usuario_id != usuario_id:
             raise EventoNoEncontrado(evento_id)
         return evento
 
-    def cancelar_evento(self, evento_id: UUID) -> Evento:
+    def cancelar_evento(self, usuario_id: UUID, evento_id: UUID) -> Evento:
         """Cancela el evento, cancela sus recordatorios pendientes y guarda el cambio.
 
         Raises:
-            EventoNoEncontrado: Si no existe.
+            EventoNoEncontrado: Si no existe o pertenece a otro usuario.
         """
-        evento = self.obtener_evento(evento_id)
+        evento = self.obtener_evento(usuario_id, evento_id)
         evento.cancelar()
         self._eventos.guardar(evento)
         self._cancelar_recordatorios_pendientes(evento.id)
         return evento
 
-    def completar_evento(self, evento_id: UUID) -> Evento:
+    def completar_evento(self, usuario_id: UUID, evento_id: UUID) -> Evento:
         """Marca el evento como completado, cancela sus recordatorios pendientes y guarda.
 
         Raises:
-            EventoNoEncontrado: Si no existe.
+            EventoNoEncontrado: Si no existe o pertenece a otro usuario.
         """
-        evento = self.obtener_evento(evento_id)
+        evento = self.obtener_evento(usuario_id, evento_id)
         evento.completar()
         self._eventos.guardar(evento)
         self._cancelar_recordatorios_pendientes(evento.id)
         return evento
 
     def reprogramar_evento(
-        self, evento_id: UUID, comienza: datetime, termina: datetime
+        self,
+        usuario_id: UUID,
+        evento_id: UUID,
+        comienza: datetime,
+        termina: datetime,
     ) -> Evento:
         """Cambia las horas de un evento comprobando que no choque con otros.
 
@@ -115,12 +123,12 @@ class ServicioAgenda:
         pendientes del evento se desplazan lo mismo que se mueve su inicio.
 
         Raises:
-            EventoNoEncontrado: Si no existe.
+            EventoNoEncontrado: Si no existe o pertenece a otro usuario.
             ValueError: Si ``termina`` no es posterior a ``comienza``.
             pydantic.ValidationError: Si las fechas no llevan zona horaria.
             ConflictoDeHorario: Si las nuevas horas se solapan con otro evento activo.
         """
-        actual = self.obtener_evento(evento_id)
+        actual = self.obtener_evento(usuario_id, evento_id)
         candidato = Evento(
             actual.usuario_id,
             actual.titulo,

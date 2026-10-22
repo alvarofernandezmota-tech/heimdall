@@ -69,7 +69,7 @@ def test_un_evento_cancelado_no_bloquea_el_hueco(entorno):
     agenda, usuarios, _ = entorno
     u = usuarios.registrar("A")
     primero = agenda.crear_evento(u.id, "Uno", madrid(23, 10), madrid(23, 11))
-    agenda.cancelar_evento(primero.id)
+    agenda.cancelar_evento(u.id, primero.id)
     agenda.crear_evento(u.id, "Dos", madrid(23, 10), madrid(23, 11))
 
 
@@ -106,23 +106,24 @@ def test_cancelar_y_completar_se_guardan(entorno):
     u = usuarios.registrar("A")
     a = agenda.crear_evento(u.id, "A", madrid(23, 10), madrid(23, 11))
     b = agenda.crear_evento(u.id, "B", madrid(23, 12), madrid(23, 13))
-    agenda.cancelar_evento(a.id)
-    agenda.completar_evento(b.id)
+    agenda.cancelar_evento(u.id, a.id)
+    agenda.completar_evento(u.id, b.id)
     assert eventos.obtener(a.id).estado == EstadoEvento.CANCELADO
     assert eventos.obtener(b.id).estado == EstadoEvento.COMPLETADO
 
 
 def test_operar_sobre_un_evento_inexistente_lanza_error(entorno):
-    agenda, _, _ = entorno
+    agenda, usuarios, _ = entorno
+    u = usuarios.registrar("A")
     with pytest.raises(EventoNoEncontrado):
-        agenda.cancelar_evento(uuid4())
+        agenda.cancelar_evento(u.id, uuid4())
 
 
 def test_reprogramar_puede_solaparse_con_su_propio_hueco_anterior(entorno):
     agenda, usuarios, eventos = entorno
     u = usuarios.registrar("A")
     e = agenda.crear_evento(u.id, "Reunión", madrid(23, 10), madrid(23, 11))
-    agenda.reprogramar_evento(e.id, madrid(23, 10, 30), madrid(23, 11, 30))
+    agenda.reprogramar_evento(u.id, e.id, madrid(23, 10, 30), madrid(23, 11, 30))
     guardado = eventos.obtener(e.id)
     assert (guardado.comienza, guardado.termina) == (madrid(23, 10, 30), madrid(23, 11, 30))
     assert len(eventos.listar_por_usuario(u.id)) == 1
@@ -134,7 +135,7 @@ def test_reprogramar_con_conflicto_lanza_error_y_no_cambia_nada(entorno):
     agenda.crear_evento(u.id, "Fijo", madrid(23, 12), madrid(23, 13))
     e = agenda.crear_evento(u.id, "Móvil", madrid(23, 10), madrid(23, 11))
     with pytest.raises(ConflictoDeHorario):
-        agenda.reprogramar_evento(e.id, madrid(23, 12, 30), madrid(23, 13, 30))
+        agenda.reprogramar_evento(u.id, e.id, madrid(23, 12, 30), madrid(23, 13, 30))
     assert eventos.obtener(e.id).comienza == madrid(23, 10)
 
 
@@ -143,8 +144,8 @@ def test_reprogramar_un_evento_cancelado_no_comprueba_conflictos(entorno):
     u = usuarios.registrar("A")
     agenda.crear_evento(u.id, "Fijo", madrid(23, 12), madrid(23, 13))
     e = agenda.crear_evento(u.id, "Cancelado", madrid(23, 10), madrid(23, 11))
-    agenda.cancelar_evento(e.id)
-    agenda.reprogramar_evento(e.id, madrid(23, 12), madrid(23, 13))
+    agenda.cancelar_evento(u.id, e.id)
+    agenda.reprogramar_evento(u.id, e.id, madrid(23, 12), madrid(23, 13))
     assert eventos.obtener(e.id).comienza == madrid(23, 12)
 
 
@@ -172,3 +173,39 @@ def test_celdas_del_dia_marca_los_tramos_ocupados(entorno):
     assert len(celdas) == 96
     assert sum(celdas) == 4
     assert celdas[72] and celdas[75] and not celdas[71] and not celdas[76]
+
+
+def test_un_usuario_no_puede_ver_el_evento_de_otro(entorno):
+    agenda, usuarios, _ = entorno
+    a, b = usuarios.registrar("A"), usuarios.registrar("B")
+    e = agenda.crear_evento(a.id, "Privado", madrid(23, 10), madrid(23, 11))
+    assert agenda.obtener_evento(a.id, e.id) == e
+    with pytest.raises(EventoNoEncontrado):
+        agenda.obtener_evento(b.id, e.id)
+
+
+def test_un_usuario_no_puede_cancelar_el_evento_de_otro(entorno):
+    agenda, usuarios, eventos = entorno
+    a, b = usuarios.registrar("A"), usuarios.registrar("B")
+    e = agenda.crear_evento(a.id, "Privado", madrid(23, 10), madrid(23, 11))
+    with pytest.raises(EventoNoEncontrado):
+        agenda.cancelar_evento(b.id, e.id)
+    assert eventos.obtener(e.id).estado == EstadoEvento.PROGRAMADO
+
+
+def test_un_usuario_no_puede_completar_el_evento_de_otro(entorno):
+    agenda, usuarios, eventos = entorno
+    a, b = usuarios.registrar("A"), usuarios.registrar("B")
+    e = agenda.crear_evento(a.id, "Privado", madrid(23, 10), madrid(23, 11))
+    with pytest.raises(EventoNoEncontrado):
+        agenda.completar_evento(b.id, e.id)
+    assert eventos.obtener(e.id).estado == EstadoEvento.PROGRAMADO
+
+
+def test_un_usuario_no_puede_reprogramar_el_evento_de_otro(entorno):
+    agenda, usuarios, eventos = entorno
+    a, b = usuarios.registrar("A"), usuarios.registrar("B")
+    e = agenda.crear_evento(a.id, "Privado", madrid(23, 10), madrid(23, 11))
+    with pytest.raises(EventoNoEncontrado):
+        agenda.reprogramar_evento(b.id, e.id, madrid(23, 15), madrid(23, 16))
+    assert eventos.obtener(e.id).comienza == madrid(23, 10)

@@ -21,6 +21,13 @@ Si `ServicioAgenda` recibe el repositorio de recordatorios:
 - Al reprogramarlo, sus avisos pendientes se desplazan lo mismo que se movió el evento.
 - Los avisos ya enviados no se tocan.
 
+## Permisos por usuario
+Toda operación sobre un evento o recordatorio concreto recibe el `usuario_id` de quien la pide
+y solo actúa si el elemento es suyo. Si es de otro usuario, responde igual que si no existiera
+(`EventoNoEncontrado` o `RecordatorioNoEncontrado`), para no revelar que existe.
+`marcar_enviado` y `vencidos` son operaciones internas del programador de avisos y no se
+ofrecerán como herramientas del chatbot.
+
 ## Errores
 | Error | Cuándo |
 |---|---|
