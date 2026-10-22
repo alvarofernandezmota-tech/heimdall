@@ -4,7 +4,7 @@
 1. Clases de dominio — hecho
 2. Relaciones — hecho
 3. Serialización y esquemas Pydantic — hecho
-4. Tablas SQL (SQLite) — pendiente
+4. Tablas SQL (SQLite) — hecho (esquema, conexión e inicialización)
 5. Repositorios — pendiente
 6. Servicios — pendiente
 7. Clase abstracta del agente — pendiente

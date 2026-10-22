@@ -10,7 +10,7 @@
 
     Dominio (app/domain) y Esquemas (app/schemas) los usan todas las capas.
 
-Hoy existen el dominio y los esquemas de todas sus clases.
+Hoy existen el dominio, los esquemas y la base de datos SQLite (sin repositorios todavía).
 
 ## Reglas
 1. `app/domain` es puro: sin SQL, sin FastAPI, sin librerías de IA, sin I/O.

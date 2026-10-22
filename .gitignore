@@ -5,3 +5,7 @@ data/*.sqlite
 .pytest_cache/
 .pytest_cache/
 .vscode/
+
+# Bases de datos locales
+data/*.sqlite*
+data/*.db*
