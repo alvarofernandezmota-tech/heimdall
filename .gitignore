@@ -4,3 +4,4 @@ __pycache__/
 data/*.sqlite
 .pytest_cache/
 .pytest_cache/
+.vscode/
