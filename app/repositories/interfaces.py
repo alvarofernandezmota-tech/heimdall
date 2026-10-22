@@ -11,7 +11,11 @@ from datetime import date, datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from app.domain.goal import EstadoObjetivo, Objetivo
+from app.domain.goal import EstadoObjetivo, Objetivo
 from app.domain.habit import Habito, RegistroHabito
+from app.domain.reminder import Recordatorio
+from app.domain.reminder import Recordatorio
 from app.domain.schedule import Evento
 from app.domain.user import Usuario
 
@@ -117,3 +121,137 @@ class RepositorioRegistrosHabito(ABC):
     @abstractmethod
     def eliminar(self, registro_id: UUID) -> bool:
         """Elimina el registro. Devuelve ``True`` si existía."""
+
+
+class RepositorioObjetivos(ABC):
+    """Operaciones de almacenamiento de objetivos."""
+
+    @abstractmethod
+    def guardar(self, objetivo: Objetivo) -> None:
+        """Inserta el objetivo o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, objetivo_id: UUID) -> Objetivo | None:
+        """Devuelve el objetivo con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_usuario(
+        self, usuario_id: UUID, estado: EstadoObjetivo | None = None
+    ) -> list[Objetivo]:
+        """Devuelve los objetivos de un usuario, los más próximos a vencer primero.
+
+        Los objetivos sin fecha límite van al final. Con ``estado`` se devuelven
+        solo los que están en esa situación.
+        """
+
+    @abstractmethod
+    def eliminar(self, objetivo_id: UUID) -> bool:
+        """Elimina el objetivo. Devuelve ``True`` si existía."""
+
+
+class RepositorioRecordatorios(ABC):
+    """Operaciones de almacenamiento de recordatorios."""
+
+    @abstractmethod
+    def guardar(self, recordatorio: Recordatorio) -> None:
+        """Inserta el recordatorio o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, recordatorio_id: UUID) -> Recordatorio | None:
+        """Devuelve el recordatorio con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_usuario(self, usuario_id: UUID) -> list[Recordatorio]:
+        """Devuelve los recordatorios de un usuario ordenados por hora programada."""
+
+    @abstractmethod
+    def listar_de_evento(self, evento_id: UUID) -> list[Recordatorio]:
+        """Devuelve los recordatorios asociados a un evento, por hora programada."""
+
+    @abstractmethod
+    def listar_pendientes_del_dia(
+        self, usuario_id: UUID, dia: date, zona: ZoneInfo
+    ) -> list[Recordatorio]:
+        """Devuelve los recordatorios pendientes de un usuario programados ese día.
+
+        El día se calcula en la zona horaria indicada.
+        """
+
+    @abstractmethod
+    def listar_vencidos(self, ahora: datetime) -> list[Recordatorio]:
+        """Devuelve los recordatorios pendientes de todos los usuarios ya vencidos.
+
+        Son los que tienen ``programado_para <= ahora``, del más antiguo al más
+        reciente. ``ahora`` debe llevar zona horaria.
+        """
+
+    @abstractmethod
+    def eliminar(self, recordatorio_id: UUID) -> bool:
+        """Elimina el recordatorio. Devuelve ``True`` si existía."""
+
+
+class RepositorioObjetivos(ABC):
+    """Operaciones de almacenamiento de objetivos."""
+
+    @abstractmethod
+    def guardar(self, objetivo: Objetivo) -> None:
+        """Inserta el objetivo o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, objetivo_id: UUID) -> Objetivo | None:
+        """Devuelve el objetivo con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_usuario(
+        self, usuario_id: UUID, estado: EstadoObjetivo | None = None
+    ) -> list[Objetivo]:
+        """Devuelve los objetivos de un usuario, los más próximos a vencer primero.
+
+        Los objetivos sin fecha límite van al final. Con ``estado`` se devuelven
+        solo los que están en esa situación.
+        """
+
+    @abstractmethod
+    def eliminar(self, objetivo_id: UUID) -> bool:
+        """Elimina el objetivo. Devuelve ``True`` si existía."""
+
+
+class RepositorioRecordatorios(ABC):
+    """Operaciones de almacenamiento de recordatorios."""
+
+    @abstractmethod
+    def guardar(self, recordatorio: Recordatorio) -> None:
+        """Inserta el recordatorio o, si ya existe su ``id``, actualiza sus datos."""
+
+    @abstractmethod
+    def obtener(self, recordatorio_id: UUID) -> Recordatorio | None:
+        """Devuelve el recordatorio con ese ``id`` o ``None`` si no existe."""
+
+    @abstractmethod
+    def listar_por_usuario(self, usuario_id: UUID) -> list[Recordatorio]:
+        """Devuelve los recordatorios de un usuario ordenados por hora programada."""
+
+    @abstractmethod
+    def listar_de_evento(self, evento_id: UUID) -> list[Recordatorio]:
+        """Devuelve los recordatorios asociados a un evento, por hora programada."""
+
+    @abstractmethod
+    def listar_pendientes_del_dia(
+        self, usuario_id: UUID, dia: date, zona: ZoneInfo
+    ) -> list[Recordatorio]:
+        """Devuelve los recordatorios pendientes de un usuario programados ese día.
+
+        El día se calcula en la zona horaria indicada.
+        """
+
+    @abstractmethod
+    def listar_vencidos(self, ahora: datetime) -> list[Recordatorio]:
+        """Devuelve los recordatorios pendientes de todos los usuarios ya vencidos.
+
+        Son los que tienen ``programado_para <= ahora``, del más antiguo al más
+        reciente. ``ahora`` debe llevar zona horaria.
+        """
+
+    @abstractmethod
+    def eliminar(self, recordatorio_id: UUID) -> bool:
+        """Elimina el recordatorio. Devuelve ``True`` si existía."""

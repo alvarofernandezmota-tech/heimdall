@@ -5,7 +5,7 @@
 2. Relaciones — hecho
 3. Serialización y esquemas Pydantic — hecho
 4. Tablas SQL (SQLite) — hecho (esquema, conexión e inicialización)
-5. Repositorios — en curso (Usuario, Evento y Hábito hechos)
+5. Repositorios — en curso (Usuario, Evento, Hábito, Objetivo y Recordatorio hechos)
 6. Servicios — pendiente
 7. Clase abstracta del agente — pendiente
 8. Agentes concretos (personal, NBA) — pendiente
