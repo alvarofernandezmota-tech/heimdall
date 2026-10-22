@@ -1,0 +1,26 @@
+# Hoja de ruta
+
+## Pasos
+1. Clases de dominio — hecho
+2. Relaciones — hecho
+3. Serialización y esquemas Pydantic — en curso
+4. Tablas SQL (SQLite) — pendiente
+5. Repositorios — pendiente
+6. Servicios — pendiente
+7. Clase abstracta del agente — pendiente
+8. Agentes concretos (personal, NBA) — pendiente
+9. Fábrica y router — pendiente
+10. Chatbot (herramientas, interfaz) — pendiente
+
+Fuera de alcance por ahora: FastAPI, Telegram, predicciones NBA, modelo de IA.
+
+## Puntos a revisar (por confirmar si son fallos)
+1. `de_usuario` exige `usuario_id`; `Mensaje` y `RegistroHabito` no lo tienen.
+2. `Horario.hay_conflicto` no distingue usuarios: compara contra todos los eventos que reciba.
+3. `total_del_dia` y `racha_diaria` usan `valor` y `cumple`; el campo `completado` de `RegistroHabito` no interviene.
+4. Mezclar fechas con y sin zona produce `TypeError` al comparar; ningún constructor lo impide.
+5. `Evento` solo valida al crearse; si se cambian las fechas después, no se revalida.
+6. `racha_diaria` empieza en hoy o, si hoy aún no cumple, en ayer.
+7. `actualizar_progreso` completa solo con 100 exacto.
+8. `resumen_del_dia` solo considera hábitos de frecuencia diaria.
+9. `historial_para_modelo` recorta con `limite` después de quitar mensajes vacíos.
