@@ -1,11 +1,16 @@
 """Casos de uso de la agenda: crear, mover y consultar eventos."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
+from app.domain.reminder import EstadoRecordatorio, Recordatorio
 from app.domain.schedule import Evento, Horario
 from app.domain.user import Usuario
-from app.repositories.interfaces import RepositorioEventos, RepositorioUsuarios
+from app.repositories.interfaces import (
+    RepositorioEventos,
+    RepositorioRecordatorios,
+    RepositorioUsuarios,
+)
 from app.schemas.schedule import EventoSchema
 from app.services.errores import ConflictoDeHorario, EventoNoEncontrado, UsuarioNoEncontrado
 
@@ -16,12 +21,22 @@ class ServicioAgenda:
     Valida los datos con los esquemas, impide solapes entre eventos activos del
     mismo usuario y delega el almacenamiento en los repositorios. No hace
     ``commit``: de eso se encarga quien abre la conexión.
+
+    Si se le da un repositorio de recordatorios, mantiene coherentes los avisos
+    de cada evento: al cancelarlo o completarlo cancela los pendientes y al
+    reprogramarlo los desplaza lo mismo que se movió el evento.
     """
 
-    def __init__(self, usuarios: RepositorioUsuarios, eventos: RepositorioEventos) -> None:
-        """Crea el servicio sobre los repositorios de usuarios y de eventos."""
+    def __init__(
+        self,
+        usuarios: RepositorioUsuarios,
+        eventos: RepositorioEventos,
+        recordatorios: RepositorioRecordatorios | None = None,
+    ) -> None:
+        """Crea el servicio sobre los repositorios de usuarios, eventos y recordatorios."""
         self._usuarios = usuarios
         self._eventos = eventos
+        self._recordatorios = recordatorios
 
     def crear_evento(
         self,
@@ -67,7 +82,7 @@ class ServicioAgenda:
         return evento
 
     def cancelar_evento(self, evento_id: UUID) -> Evento:
-        """Cancela el evento y guarda el cambio.
+        """Cancela el evento, cancela sus recordatorios pendientes y guarda el cambio.
 
         Raises:
             EventoNoEncontrado: Si no existe.
@@ -75,10 +90,11 @@ class ServicioAgenda:
         evento = self.obtener_evento(evento_id)
         evento.cancelar()
         self._eventos.guardar(evento)
+        self._cancelar_recordatorios_pendientes(evento.id)
         return evento
 
     def completar_evento(self, evento_id: UUID) -> Evento:
-        """Marca el evento como completado y guarda el cambio.
+        """Marca el evento como completado, cancela sus recordatorios pendientes y guarda.
 
         Raises:
             EventoNoEncontrado: Si no existe.
@@ -86,6 +102,7 @@ class ServicioAgenda:
         evento = self.obtener_evento(evento_id)
         evento.completar()
         self._eventos.guardar(evento)
+        self._cancelar_recordatorios_pendientes(evento.id)
         return evento
 
     def reprogramar_evento(
@@ -94,7 +111,8 @@ class ServicioAgenda:
         """Cambia las horas de un evento comprobando que no choque con otros.
 
         El evento no se considera en conflicto consigo mismo. Si el evento está
-        cancelado o completado, no se comprueban solapes.
+        cancelado o completado, no se comprueban solapes. Los recordatorios
+        pendientes del evento se desplazan lo mismo que se mueve su inicio.
 
         Raises:
             EventoNoEncontrado: Si no existe.
@@ -116,6 +134,8 @@ class ServicioAgenda:
         EventoSchema.model_validate(candidato)
         self._exigir_sin_conflicto(candidato)
         self._eventos.guardar(candidato)
+        if candidato.esta_activo():
+            self._desplazar_recordatorios_pendientes(candidato.id, comienza - actual.comienza)
         return candidato
 
     def eventos_del_dia(self, usuario_id: UUID, dia: date) -> list[Evento]:
@@ -157,3 +177,27 @@ class ServicioAgenda:
         horario = Horario(self._eventos.listar_por_usuario(evento.usuario_id))
         if horario.hay_conflicto(evento):
             raise ConflictoDeHorario(evento.titulo)
+
+    def _recordatorios_pendientes(self, evento_id: UUID) -> list[Recordatorio]:
+        """Devuelve los recordatorios pendientes de un evento (vacío si no hay repositorio)."""
+        if self._recordatorios is None:
+            return []
+        return [
+            r
+            for r in self._recordatorios.listar_de_evento(evento_id)
+            if r.estado == EstadoRecordatorio.PENDIENTE
+        ]
+
+    def _cancelar_recordatorios_pendientes(self, evento_id: UUID) -> None:
+        """Cancela los recordatorios pendientes de un evento."""
+        for recordatorio in self._recordatorios_pendientes(evento_id):
+            recordatorio.cancelar()
+            self._recordatorios.guardar(recordatorio)
+
+    def _desplazar_recordatorios_pendientes(
+        self, evento_id: UUID, desplazamiento: timedelta
+    ) -> None:
+        """Mueve los recordatorios pendientes de un evento la misma duración que el evento."""
+        for recordatorio in self._recordatorios_pendientes(evento_id):
+            recordatorio.programado_para += desplazamiento
+            self._recordatorios.guardar(recordatorio)
