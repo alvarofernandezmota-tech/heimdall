@@ -1,7 +1,11 @@
 """Errores previstos al usar los servicios de aplicación."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime
 from uuid import UUID
+
+from app.domain.errores import TransicionNoPermitida
 
 
 class ErrorDeServicio(Exception):
@@ -54,9 +58,27 @@ class RecordatorioEnElPasado(ErrorDeServicio):
 
 
 class EventoNoActivo(ErrorDeServicio):
-    """El evento está cancelado o completado y no admite recordatorios."""
+    """El evento está cancelado o completado y no admite la operación."""
 
     def __init__(self, titulo: str) -> None:
         """Guarda el título del evento y construye el mensaje."""
         super().__init__(f"El evento «{titulo}» está cancelado o completado.")
         self.titulo = titulo
+
+
+class CambioDeEstadoNoPermitido(ErrorDeServicio):
+    """Se pidió un cambio de estado que las reglas no permiten."""
+
+    def __init__(self, detalle: str) -> None:
+        """Guarda el detalle y construye el mensaje."""
+        super().__init__(detalle)
+        self.detalle = detalle
+
+
+@contextmanager
+def transicion_de_estado() -> Iterator[None]:
+    """Convierte ``TransicionNoPermitida`` del dominio en ``CambioDeEstadoNoPermitido``."""
+    try:
+        yield
+    except TransicionNoPermitida as error:
+        raise CambioDeEstadoNoPermitido(str(error)) from error

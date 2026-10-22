@@ -21,6 +21,9 @@ Si `ServicioAgenda` recibe el repositorio de recordatorios:
 - Al reprogramarlo, sus avisos pendientes se desplazan lo mismo que se movió el evento.
 - Los avisos ya enviados no se tocan.
 
+## Transiciones de estado
+El dominio solo permite Evento PROGRAMADO a COMPLETADO o CANCELADO, y Recordatorio PENDIENTE a ENVIADO o CANCELADO. Los servicios convierten el error del dominio en `CambioDeEstadoNoPermitido`. `reprogramar_evento` rechaza los eventos que no estén programados (`EventoNoActivo`). El programador de avisos debe capturar `CambioDeEstadoNoPermitido` en `marcar_enviado`, por si el aviso se canceló entre listarlo y enviarlo.
+
 ## Permisos por usuario
 Toda operación sobre un evento o recordatorio concreto recibe el `usuario_id` de quien la pide
 y solo actúa si el elemento es suyo. Si es de otro usuario, responde igual que si no existiera
@@ -36,7 +39,8 @@ ofrecerán como herramientas del chatbot.
 | `ConflictoDeHorario` | El evento choca con otro activo del mismo usuario |
 | `RecordatorioNoEncontrado` | El recordatorio no existe |
 | `RecordatorioEnElPasado` | La hora del aviso ya ha pasado |
-| `EventoNoActivo` | El evento está cancelado o completado y no admite avisos |
+| `EventoNoActivo` | El evento está cancelado o completado y no admite avisos ni cambios de hora |
+| `CambioDeEstadoNoPermitido` | Cambio de estado que las reglas no permiten, por ejemplo cancelar un evento ya completado |
 
 Los datos mal formados (nombre vacío, zona inexistente, fechas sin zona) siguen
 lanzando `pydantic.ValidationError` o `ValueError`.

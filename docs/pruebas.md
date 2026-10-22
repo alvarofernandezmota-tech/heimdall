@@ -1,16 +1,16 @@
 # Pruebas
 
 Se ejecutan con `pytest -q` (configuración en `pytest.ini`, `pythonpath = .`).
-Esperado hoy: 245 tests en verde.
+Esperado hoy: 272 tests en verde.
 
 | Archivo | Tests |
 |---|---|
 | test_user.py | 4 |
 | test_message.py | 3 |
-| test_schedule.py | 5 |
+| test_schedule.py | 6 |
 | test_habit.py | 5 |
 | test_goal.py | 5 (uno parametrizado) |
-| test_reminder.py | 3 |
+| test_reminder.py | 4 |
 | test_extras.py | 9 |
 | test_relations.py | 5 |
 | test_schemas.py | 7 |
@@ -26,10 +26,11 @@ Esperado hoy: 245 tests en verde.
 | test_repo_recordatorios.py | 14 |
 | test_repo_conversaciones.py | 19 |
 | test_servicios_usuarios.py | 9 |
-| test_servicios_agenda.py | 21 |
-| test_servicios_recordatorios.py | 16 |
+| test_servicios_agenda.py | 25 |
+| test_servicios_recordatorios.py | 19 |
 | test_agenda_recordatorios.py | 6 |
 | test_importaciones.py | 28 |
+| test_transiciones.py | 18 |
 | test_calidad.py | 2 |
 
 ## Convenciones

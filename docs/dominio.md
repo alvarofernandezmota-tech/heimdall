@@ -18,7 +18,8 @@ Método: `esta_vacio()` (true si solo hay espacios).
 `EstadoEvento`: programado, completado, cancelado.
 `Evento`: usuario_id, titulo, comienza, termina, id, descripcion, ubicacion, estado.
 - `__post_init__` exige `termina > comienza` (`ValueError`).
-- `cancelar`, `completar`, `esta_activo` (solo PROGRAMADO), `duracion`.
+- `cancelar` y `completar` solo valen desde PROGRAMADO (si no, `TransicionNoPermitida`); `restablecer()` es la corrección manual explícita.
+- `esta_activo` (solo PROGRAMADO), `duracion`.
 - `se_solapa_con(otro)`: solape estricto; 10–11 y 11–12 no chocan.
 
 `Horario(eventos)`:
@@ -44,7 +45,8 @@ Método: `esta_vacio()` (true si solo hay espacios).
 ## reminder.py
 `EstadoRecordatorio`: pendiente, enviado, cancelado.
 `Recordatorio`: usuario_id, mensaje, programado_para, id, evento_id, habito_id, estado.
-- `marcar_enviado`, `cancelar`, `esta_vencido(ahora)` (pendiente y ya pasada su hora).
+- `marcar_enviado` y `cancelar` solo valen desde PENDIENTE (si no, `TransicionNoPermitida`); `restablecer()` es la corrección manual explícita.
+- `esta_vencido(ahora)` (pendiente y ya pasada su hora).
 
 ## relations.py (funciones puras)
 | Función | Qué hace |
@@ -57,3 +59,7 @@ Método: `esta_vacio()` (true si solo hay espacios).
 | `total_del_dia(habito, registros, dia, zona)` | Suma de `valor` ese día |
 | `racha_diaria(habito, registros, hoy, zona)` | Días seguidos cumpliendo el objetivo |
 | `resumen_del_dia(usuario, dia, eventos, habitos, registros, recordatorios)` | Diccionario con eventos, hábitos pendientes y recordatorios |
+
+## errores.py
+`TransicionNoPermitida` (hereda de `ValueError`): cambio de estado que las reglas no permiten. Guarda `actual` y `destino`.
+Transiciones válidas: Evento PROGRAMADO a COMPLETADO o CANCELADO; Recordatorio PENDIENTE a ENVIADO o CANCELADO.

@@ -12,3 +12,4 @@
 | 8 | El modelo de lenguaje no toca la base de datos | Seguridad y control; solo usa herramientas |
 | 9 | `resumen_del_dia` sin modelo de lenguaje | Respuesta rápida, exacta y comprobable |
 | 10 | Medir con un CSV de frases antes de añadir canales | Lección de femix: no crecer antes de medir |
+| 11 | Estados con transiciones estrictas | Un objeto cerrado no se reabre por accidente; la corrección manual es explícita (`restablecer()`) |

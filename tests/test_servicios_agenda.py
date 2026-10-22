@@ -11,7 +11,13 @@ from app.domain.schedule import EstadoEvento
 from app.repositories.sqlite_eventos import RepositorioEventosSQLite
 from app.repositories.sqlite_usuarios import RepositorioUsuariosSQLite
 from app.services.agenda import ServicioAgenda
-from app.services.errores import ConflictoDeHorario, EventoNoEncontrado, UsuarioNoEncontrado
+from app.services.errores import (
+    CambioDeEstadoNoPermitido,
+    ConflictoDeHorario,
+    EventoNoActivo,
+    EventoNoEncontrado,
+    UsuarioNoEncontrado,
+)
 from app.services.usuarios import ServicioUsuarios
 
 MAD = ZoneInfo("Europe/Madrid")
@@ -139,14 +145,14 @@ def test_reprogramar_con_conflicto_lanza_error_y_no_cambia_nada(entorno):
     assert eventos.obtener(e.id).comienza == madrid(23, 10)
 
 
-def test_reprogramar_un_evento_cancelado_no_comprueba_conflictos(entorno):
+def test_no_se_puede_reprogramar_un_evento_cancelado(entorno):
     agenda, usuarios, eventos = entorno
     u = usuarios.registrar("A")
-    agenda.crear_evento(u.id, "Fijo", madrid(23, 12), madrid(23, 13))
     e = agenda.crear_evento(u.id, "Cancelado", madrid(23, 10), madrid(23, 11))
     agenda.cancelar_evento(u.id, e.id)
-    agenda.reprogramar_evento(u.id, e.id, madrid(23, 12), madrid(23, 13))
-    assert eventos.obtener(e.id).comienza == madrid(23, 12)
+    with pytest.raises(EventoNoActivo):
+        agenda.reprogramar_evento(u.id, e.id, madrid(23, 12), madrid(23, 13))
+    assert eventos.obtener(e.id).comienza == madrid(23, 10)
 
 
 def test_eventos_del_dia_usa_la_zona_del_usuario(entorno):
@@ -208,4 +214,44 @@ def test_un_usuario_no_puede_reprogramar_el_evento_de_otro(entorno):
     e = agenda.crear_evento(a.id, "Privado", madrid(23, 10), madrid(23, 11))
     with pytest.raises(EventoNoEncontrado):
         agenda.reprogramar_evento(b.id, e.id, madrid(23, 15), madrid(23, 16))
+    assert eventos.obtener(e.id).comienza == madrid(23, 10)
+
+
+def test_no_se_puede_cancelar_dos_veces_un_evento(entorno):
+    agenda, usuarios, eventos = entorno
+    u = usuarios.registrar("A")
+    e = agenda.crear_evento(u.id, "Reunión", madrid(23, 10), madrid(23, 11))
+    agenda.cancelar_evento(u.id, e.id)
+    with pytest.raises(CambioDeEstadoNoPermitido):
+        agenda.cancelar_evento(u.id, e.id)
+    assert eventos.obtener(e.id).estado == EstadoEvento.CANCELADO
+
+
+def test_no_se_puede_completar_un_evento_cancelado(entorno):
+    agenda, usuarios, eventos = entorno
+    u = usuarios.registrar("A")
+    e = agenda.crear_evento(u.id, "Reunión", madrid(23, 10), madrid(23, 11))
+    agenda.cancelar_evento(u.id, e.id)
+    with pytest.raises(CambioDeEstadoNoPermitido):
+        agenda.completar_evento(u.id, e.id)
+    assert eventos.obtener(e.id).estado == EstadoEvento.CANCELADO
+
+
+def test_no_se_puede_cancelar_un_evento_completado(entorno):
+    agenda, usuarios, eventos = entorno
+    u = usuarios.registrar("A")
+    e = agenda.crear_evento(u.id, "Reunión", madrid(23, 10), madrid(23, 11))
+    agenda.completar_evento(u.id, e.id)
+    with pytest.raises(CambioDeEstadoNoPermitido):
+        agenda.cancelar_evento(u.id, e.id)
+    assert eventos.obtener(e.id).estado == EstadoEvento.COMPLETADO
+
+
+def test_no_se_puede_reprogramar_un_evento_completado(entorno):
+    agenda, usuarios, eventos = entorno
+    u = usuarios.registrar("A")
+    e = agenda.crear_evento(u.id, "Reunión", madrid(23, 10), madrid(23, 11))
+    agenda.completar_evento(u.id, e.id)
+    with pytest.raises(EventoNoActivo):
+        agenda.reprogramar_evento(u.id, e.id, madrid(23, 12), madrid(23, 13))
     assert eventos.obtener(e.id).comienza == madrid(23, 10)

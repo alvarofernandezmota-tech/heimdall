@@ -12,7 +12,13 @@ from app.repositories.interfaces import (
     RepositorioUsuarios,
 )
 from app.schemas.schedule import EventoSchema
-from app.services.errores import ConflictoDeHorario, EventoNoEncontrado, UsuarioNoEncontrado
+from app.services.errores import (
+    ConflictoDeHorario,
+    EventoNoActivo,
+    EventoNoEncontrado,
+    UsuarioNoEncontrado,
+    transicion_de_estado,
+)
 
 
 class ServicioAgenda:
@@ -90,9 +96,11 @@ class ServicioAgenda:
 
         Raises:
             EventoNoEncontrado: Si no existe o pertenece a otro usuario.
+            CambioDeEstadoNoPermitido: Si el evento ya está cancelado o completado.
         """
         evento = self.obtener_evento(usuario_id, evento_id)
-        evento.cancelar()
+        with transicion_de_estado():
+            evento.cancelar()
         self._eventos.guardar(evento)
         self._cancelar_recordatorios_pendientes(evento.id)
         return evento
@@ -102,9 +110,11 @@ class ServicioAgenda:
 
         Raises:
             EventoNoEncontrado: Si no existe o pertenece a otro usuario.
+            CambioDeEstadoNoPermitido: Si el evento ya está cancelado o completado.
         """
         evento = self.obtener_evento(usuario_id, evento_id)
-        evento.completar()
+        with transicion_de_estado():
+            evento.completar()
         self._eventos.guardar(evento)
         self._cancelar_recordatorios_pendientes(evento.id)
         return evento
@@ -118,17 +128,20 @@ class ServicioAgenda:
     ) -> Evento:
         """Cambia las horas de un evento comprobando que no choque con otros.
 
-        El evento no se considera en conflicto consigo mismo. Si el evento está
-        cancelado o completado, no se comprueban solapes. Los recordatorios
-        pendientes del evento se desplazan lo mismo que se mueve su inicio.
+        El evento no se considera en conflicto consigo mismo. Solo se pueden
+        reprogramar eventos programados. Los recordatorios pendientes del evento se
+        desplazan lo mismo que se mueve su inicio.
 
         Raises:
             EventoNoEncontrado: Si no existe o pertenece a otro usuario.
+            EventoNoActivo: Si el evento está cancelado o completado.
             ValueError: Si ``termina`` no es posterior a ``comienza``.
             pydantic.ValidationError: Si las fechas no llevan zona horaria.
             ConflictoDeHorario: Si las nuevas horas se solapan con otro evento activo.
         """
         actual = self.obtener_evento(usuario_id, evento_id)
+        if not actual.esta_activo():
+            raise EventoNoActivo(actual.titulo)
         candidato = Evento(
             actual.usuario_id,
             actual.titulo,
@@ -142,8 +155,7 @@ class ServicioAgenda:
         EventoSchema.model_validate(candidato)
         self._exigir_sin_conflicto(candidato)
         self._eventos.guardar(candidato)
-        if candidato.esta_activo():
-            self._desplazar_recordatorios_pendientes(candidato.id, comienza - actual.comienza)
+        self._desplazar_recordatorios_pendientes(candidato.id, comienza - actual.comienza)
         return candidato
 
     def eventos_del_dia(self, usuario_id: UUID, dia: date) -> list[Evento]:

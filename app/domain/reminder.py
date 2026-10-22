@@ -5,6 +5,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
+from app.domain.errores import TransicionNoPermitida
+
 
 class EstadoRecordatorio(StrEnum):
     """Situación de un recordatorio."""
@@ -37,12 +39,34 @@ class Recordatorio:
     estado: EstadoRecordatorio = EstadoRecordatorio.PENDIENTE
 
     def marcar_enviado(self) -> None:
-        """Pasa el recordatorio a ``ENVIADO``."""
-        self.estado = EstadoRecordatorio.ENVIADO
+        """Pasa el recordatorio de ``PENDIENTE`` a ``ENVIADO``.
+
+        Raises:
+            TransicionNoPermitida: Si el recordatorio ya está enviado o cancelado.
+        """
+        self._cambiar_desde_pendiente(EstadoRecordatorio.ENVIADO)
 
     def cancelar(self) -> None:
-        """Pasa el recordatorio a ``CANCELADO``."""
-        self.estado = EstadoRecordatorio.CANCELADO
+        """Pasa el recordatorio de ``PENDIENTE`` a ``CANCELADO``.
+
+        Raises:
+            TransicionNoPermitida: Si el recordatorio ya está enviado o cancelado.
+        """
+        self._cambiar_desde_pendiente(EstadoRecordatorio.CANCELADO)
+
+    def restablecer(self) -> None:
+        """Devuelve el recordatorio a ``PENDIENTE`` desde cualquier estado.
+
+        Es la corrección manual explícita de un cambio hecho por error; los
+        métodos normales no permiten volver atrás.
+        """
+        self.estado = EstadoRecordatorio.PENDIENTE
+
+    def _cambiar_desde_pendiente(self, destino: EstadoRecordatorio) -> None:
+        """Cambia el estado solo si el recordatorio está pendiente."""
+        if self.estado != EstadoRecordatorio.PENDIENTE:
+            raise TransicionNoPermitida(self.estado, destino)
+        self.estado = destino
 
     def esta_vencido(self, ahora: datetime) -> bool:
         """Indica si sigue pendiente y su hora ya ha llegado o pasado.

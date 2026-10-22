@@ -18,6 +18,7 @@ from app.services.errores import (
     RecordatorioEnElPasado,
     RecordatorioNoEncontrado,
     UsuarioNoEncontrado,
+    transicion_de_estado,
 )
 
 
@@ -104,9 +105,11 @@ class ServicioRecordatorios:
 
         Raises:
             RecordatorioNoEncontrado: Si no existe o es de otro usuario.
+            CambioDeEstadoNoPermitido: Si ya está enviado o cancelado.
         """
         recordatorio = self._obtener(usuario_id, recordatorio_id)
-        recordatorio.cancelar()
+        with transicion_de_estado():
+            recordatorio.cancelar()
         self._recordatorios.guardar(recordatorio)
         return recordatorio
 
@@ -118,11 +121,13 @@ class ServicioRecordatorios:
 
         Raises:
             RecordatorioNoEncontrado: Si no existe.
+            CambioDeEstadoNoPermitido: Si ya está enviado o cancelado.
         """
         recordatorio = self._recordatorios.obtener(recordatorio_id)
         if recordatorio is None:
             raise RecordatorioNoEncontrado(recordatorio_id)
-        recordatorio.marcar_enviado()
+        with transicion_de_estado():
+            recordatorio.marcar_enviado()
         self._recordatorios.guardar(recordatorio)
         return recordatorio
 

@@ -14,6 +14,7 @@ from app.repositories.sqlite_recordatorios import RepositorioRecordatoriosSQLite
 from app.repositories.sqlite_usuarios import RepositorioUsuariosSQLite
 from app.services.agenda import ServicioAgenda
 from app.services.errores import (
+    CambioDeEstadoNoPermitido,
     EventoNoActivo,
     EventoNoEncontrado,
     RecordatorioEnElPasado,
@@ -190,3 +191,29 @@ def test_un_usuario_no_puede_cancelar_el_recordatorio_de_otro(entorno, otro_usua
     with pytest.raises(RecordatorioNoEncontrado):
         servicio.cancelar(otro_usuario.id, r.id)
     assert repo.obtener(r.id).estado == EstadoRecordatorio.PENDIENTE
+
+
+def test_no_se_puede_cancelar_un_recordatorio_ya_enviado(entorno):
+    servicio, _, repo, u = entorno
+    r = servicio.programar(u.id, "Llamar", madrid(23, 18))
+    servicio.marcar_enviado(r.id)
+    with pytest.raises(CambioDeEstadoNoPermitido):
+        servicio.cancelar(u.id, r.id)
+    assert repo.obtener(r.id).estado == EstadoRecordatorio.ENVIADO
+
+
+def test_no_se_puede_marcar_como_enviado_un_recordatorio_cancelado(entorno):
+    servicio, _, repo, u = entorno
+    r = servicio.programar(u.id, "Llamar", madrid(23, 18))
+    servicio.cancelar(u.id, r.id)
+    with pytest.raises(CambioDeEstadoNoPermitido):
+        servicio.marcar_enviado(r.id)
+    assert repo.obtener(r.id).estado == EstadoRecordatorio.CANCELADO
+
+
+def test_no_se_puede_enviar_dos_veces_un_recordatorio(entorno):
+    servicio, _, _, u = entorno
+    r = servicio.programar(u.id, "Llamar", madrid(23, 18))
+    servicio.marcar_enviado(r.id)
+    with pytest.raises(CambioDeEstadoNoPermitido):
+        servicio.marcar_enviado(r.id)

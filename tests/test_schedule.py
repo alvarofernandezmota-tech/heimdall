@@ -28,11 +28,16 @@ def test_evento_de_duracion_cero():
         Evento(u.id, "Cero", hora(18), hora(18))
 
 
-def test_cancelar_y_completar():
+def test_cancelar():
     u = Usuario(nombre="Álvaro")
     e = Evento(u.id, "Reunión", hora(10), hora(11))
     e.cancelar()
     assert e.estado == EstadoEvento.CANCELADO
+
+
+def test_completar():
+    u = Usuario(nombre="Álvaro")
+    e = Evento(u.id, "Reunión", hora(10), hora(11))
     e.completar()
     assert e.estado == EstadoEvento.COMPLETADO
 

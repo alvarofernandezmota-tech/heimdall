@@ -24,10 +24,15 @@ def test_recordatorio_de_un_evento():
     assert r.evento_id == e.id
 
 
-def test_enviar_y_cancelar():
+def test_marcar_enviado():
     u = Usuario(nombre="Álvaro")
     r = Recordatorio(u.id, "Llamar", cuando(12))
     r.marcar_enviado()
     assert r.estado == EstadoRecordatorio.ENVIADO
+
+
+def test_cancelar():
+    u = Usuario(nombre="Álvaro")
+    r = Recordatorio(u.id, "Llamar", cuando(12))
     r.cancelar()
     assert r.estado == EstadoRecordatorio.CANCELADO

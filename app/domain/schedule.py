@@ -6,6 +6,8 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
+from app.domain.errores import TransicionNoPermitida
+
 
 class EstadoEvento(StrEnum):
     """Ciclo de vida de un evento."""
@@ -51,12 +53,34 @@ class Evento:
             )
 
     def cancelar(self) -> None:
-        """Pasa el evento a ``CANCELADO``."""
-        self.estado = EstadoEvento.CANCELADO
+        """Pasa el evento de ``PROGRAMADO`` a ``CANCELADO``.
+
+        Raises:
+            TransicionNoPermitida: Si el evento ya está completado o cancelado.
+        """
+        self._cambiar_desde_programado(EstadoEvento.CANCELADO)
 
     def completar(self) -> None:
-        """Pasa el evento a ``COMPLETADO``."""
-        self.estado = EstadoEvento.COMPLETADO
+        """Pasa el evento de ``PROGRAMADO`` a ``COMPLETADO``.
+
+        Raises:
+            TransicionNoPermitida: Si el evento ya está completado o cancelado.
+        """
+        self._cambiar_desde_programado(EstadoEvento.COMPLETADO)
+
+    def restablecer(self) -> None:
+        """Devuelve el evento a ``PROGRAMADO`` desde cualquier estado.
+
+        Es la corrección manual explícita de un cambio hecho por error; los
+        métodos normales no permiten volver atrás.
+        """
+        self.estado = EstadoEvento.PROGRAMADO
+
+    def _cambiar_desde_programado(self, destino: EstadoEvento) -> None:
+        """Cambia el estado solo si el evento está programado."""
+        if self.estado != EstadoEvento.PROGRAMADO:
+            raise TransicionNoPermitida(self.estado, destino)
+        self.estado = destino
 
     def esta_activo(self) -> bool:
         """Indica si el evento sigue programado (ni cancelado ni completado)."""
