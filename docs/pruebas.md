@@ -15,10 +15,8 @@ Esperado hoy: 73 tests en verde.
 | test_relations.py | 5 |
 | test_schemas.py | 7 |
 | test_schemas_resto.py | 15 |
-| test_horario_usuarios.py | 1 |
-| test_schemas_resto.py | 15 |
-| test_horario_usuarios.py | 1 |
-
+| test_horario_usuarios.py | 2 |
+| test_schemas_texto.py | 10 |
 
 ## Convenciones
 - Un archivo de test por módulo de dominio.
